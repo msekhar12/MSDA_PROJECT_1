@@ -1,5 +1,47 @@
+
+
+/*
+
+STUDENT DATABASE:
+The main idea of this project is to construct a student database for an University, which helps in the process of student admission (or application phase).
+
+I have assumed the following requirements:
+
+1. The University must be able to maintain the degrees information (Degree names like Data Analytics, Degree level - Bachelor/Master/PhD/Post Doc etc.
+2. For each degree offered, the University must be able to maintain information on acceptable pre-requisite degrees for admission into the offered degrees.
+3. The University must be able to maintain the fee details (both In-state, Out-state fee) for each degree it offers. For instance, in most of the Universities, the fees for MBA degree
+   is more than other Master programs. So the University must be able to maintain different fees for different programs. 
+4. The University offers subsidized fee (in-state fee) for International students, whose country of citizenship is an under developed country. The University will obtain the
+   various countries and their per-capita details anually, and classify the countries into 4 groups - LOW, LOWER MIDDLE, UPPER MIDDLE and HIGH Incomes. Students whose citizenship is from
+   LOW per-capita countries, are offered In-State fee, by default.The University obtains the countries information from the following website:
+   "http://www.iawp.org/joiniawp/countrylist.htm". (A program in R will be built to parse the data from this website, and load the countries information into one of the tables)
+5. The database must store prospective applicant details (such as his first name, middle initial, last name, address, city, state, country (where he currently lives), country
+   of citizenship.
+6. Each prospective applicant must be able to apply to more than one programs (if desired).
+7. Each prospective student must be able to track his application status.
+9. Each prospective student must be able to withdraw his application, and the student details must be deleted from the system.
+
+NOTE:
+1. If you query just the individual tables, then you may not get information that makes sense, since all the tables are tightly coupled by REFERENTIAL INTEGRITY Constraints.
+Hence you have to join the required tables using Primary Key and Foreign Key relationships, in order to get meaningful information. The attached data model (physical) can be used 
+to obtain information on how to join tables to get meaningful information.
+
+2. Just for your convinience, I am including some useful queries after each table creation. Please follow the embedded comments while you review the DDL.
+3. Some additional queries are provided at the end of the Definitions statements.
+*/
+
+
+
+/* The DDL - Data Definition Language statements follow */
+
+/*Create APPLICATION_STATUS_CODES Table*/
 DROP TABLE IF EXISTS APPLICATION_STATUS_CODES CASCADE;
 CREATE TABLE APPLICATION_STATUS_CODES(STATUS_ID INTEGER NOT NULL PRIMARY KEY,STATUS_DESCRIPTION CHAR(60) NOT NULL);
+
+/*The application status table, will maintain various application statuses. The current system will maintain 5 application statuses:
+1. APPLICATION CREATED  2. APPLICATION SUBMITTED, 3. WAITING FOR PENDING DOCUMENTS, 4. APPLICATION UNDER REVIEW, 5. DECISION AVAILABLE
+The University can add any new application statuses, if needed, by inserting data into this table.
+*/
 
 INSERT INTO APPLICATION_STATUS_CODES VALUES(1,'APPLICATION CREATED');
 INSERT INTO APPLICATION_STATUS_CODES VALUES(2,'APPLICATION SUBMITTED');
@@ -7,9 +49,12 @@ INSERT INTO APPLICATION_STATUS_CODES VALUES(3,'WAITING FOR PENDING DOCUMENTS');
 INSERT INTO APPLICATION_STATUS_CODES VALUES(4,'APPLICATION UNDER REVIEW');
 INSERT INTO APPLICATION_STATUS_CODES VALUES(5,'DECISION AVAILABLE');
 
-
+/*To display all the application status codes use the following query*/
 SELECT * FROM  APPLICATION_STATUS_CODES;
 
+/*The EDUCATION_LEVELS table will maintain all the education levels, that any typical applicant would have. This table will also be useful to maintain the pre-requisite
+ education needed for various degree programs the University offers.
+*/
 DROP TABLE IF EXISTS EDUCATION_LEVELS CASCADE;
 CREATE TABLE EDUCATION_LEVELS(EDUCATION_ID INTEGER NOT NULL PRIMARY KEY,EDUCATION_DESCRIPTION VARCHAR(250) NOT NULL);
 
@@ -22,31 +67,10 @@ INSERT INTO EDUCATION_LEVELS VALUES(6,'MASTERS DEGREE');
 INSERT INTO EDUCATION_LEVELS VALUES(7,'Ph. D');
 INSERT INTO EDUCATION_LEVELS VALUES(8,'Post Doctorate');
 
+/*To display all the Education levels, use this query*/
 SELECT * FROM EDUCATION_LEVELS;
 
-/*DROP TABLE IF EXISTS COUNTRIES CASCADE;
- 
-CREATE TABLE COUNTRIES(COUNTRY_ID SERIAL NOT NULL PRIMARY KEY,
-COUNTRY_CODE CHAR(10) NOT NULL,
-COUNTRY_NAME VARCHAR(254) NOT NULL,
-CURRENCY_CODE CHAR(10) NOT NULL,
-CURRENCY_NAME VARCHAR(254) NOT NULL
-);
-*/
-
-/*Copy the currency_codes.csv file to a know location. 
-I copied the file to the location "C:\Users\Sekhar\Documents\CUNY\607 Assignments\" 
-in a windows machine, and changed the file permissions to share the file with EVERYONE.
-
-If you are using Linux, use the command chmod 777 <file_name>
-
-*/
-
-/*COPY COUNTRIES (COUNTRY_NAME, COUNTRY_CODE, CURRENCY_NAME,CURRENCY_CODE) 
-FROM 'C:\Users\Sekhar\Documents\CUNY\607 Assignments\CURRENCY_CODES.CSV' DELIMITER ',' CSV HEADER;
-*/
-
-/*SELECT * FROM COUNTRIES where country_code = 'IN';*/
+/*The INCOME_CODES Table will maintain various income levels available. The University can add any new Income levels, if needed in future*/
 
 DROP TABLE IF EXISTS INCOME_CODES CASCADE;
 
@@ -58,7 +82,15 @@ INSERT INTO INCOME_CODES VALUES(2,'UPPER MIDDLE');
 INSERT INTO INCOME_CODES VALUES(3,'LOWER MIDDLE');
 INSERT INTO INCOME_CODES VALUES(4,'LOW');
 
+/*To get the current data from INCOME_CODES Table, use this query*/
 SELECT * FROM INCOME_CODES;
+
+/*The COUNTRY_INCOME_CLASSIFICATION Table will maintain information about all the countries in the world, and the country classification
+ - LOW or HIGH or UPPER MIDDLE or LOWER MIDDLE, depending on the percapita income. This table will be loaded periodically by parsing the data from the following website:
+
+ "http://www.iawp.org/joiniawp/countrylist.htm". (An program in R will be built to parse the data from this website, and load the countries information into one of the tables)
+
+*/
 
 DROP TABLE IF EXISTS COUNTRY_INCOME_CLASSIFICATION CASCADE;
 
@@ -67,11 +99,25 @@ COUNTRY_NAME VARCHAR(254) NOT NULL, INCOME_ID INTEGER NOT NULL,
 CONSTRAINT INCOME_ID_FK FOREIGN KEY(INCOME_ID) REFERENCES INCOME_CODES(INCOME_ID)
 );
 
+/*Use the following COPY Command to LOAD the CSV File into the COUNTRY_INCOME_CLASSIFICATION. The input CSV file will be created by an R Program, by parsing the data from
+the website: "http://www.iawp.org/joiniawp/countrylist.htm"
+
+NOTE that the generated CSV File must be stored at the location to which the LOAD Job has access to. Also the permissions on the CSV file must be changed to at least READ 
+(in Unix 666 or 777). In Windows, the file permissions can be changed, by right clicking on the file, and sharing the file with everyone or to specific Users who would 
+load the CSV file to the COUNTRY_INCOME_CLASSIFICATION Table.
+
+*/
+
 COPY COUNTRY_INCOME_CLASSIFICATION (COUNTRY_NAME,COUNTRY_CODE,  INCOME_ID) 
 FROM 'C:\Users\Sekhar\Documents\CUNY\607 Assignments\income_levels.CSV' DELIMITER ',' CSV HEADER;
 
-SELECT * FROM COUNTRY_INCOME_CLASSIFICATION A, INCOME_CODES B WHERE A.INCOME_ID = B.INCOME_ID;
 
+/*The following query will display all the countries and their income classifications*/
+SELECT A.COUNTRY_ID, A.COUNTRY_CODE, A.COUNTRY_NAME, A.INCOME_ID, B.INCOME_CLASS 
+FROM 
+COUNTRY_INCOME_CLASSIFICATION A, INCOME_CODES B WHERE A.INCOME_ID = B.INCOME_ID;
+
+/*The IN_STATE_FEE_CODES will maintain the in-state fee information*/
 DROP TABLE IF EXISTS IN_STATE_FEE_CODES CASCADE;
 
 CREATE TABLE IN_STATE_FEE_CODES
@@ -81,6 +127,14 @@ CREDIT_HOUR_FEE DECIMAL(30,2) NOT NULL
 );
 
 INSERT INTO IN_STATE_FEE_CODES VALUES(1,450.00);
+INSERT INTO IN_STATE_FEE_CODES VALUES(2,650.00);
+INSERT INTO IN_STATE_FEE_CODES VALUES(3,350.00);
+
+/*TO SELECT all the data from IN_STATE_FEE_CODES table, use this query:*/
+SELECT * FROM IN_STATE_FEE_CODES;
+
+
+/*The Out_STATE_FEE_CODES will maintain the Out-state fee information*/
 
 DROP TABLE IF EXISTS OUT_STATE_FEE_CODES CASCADE;
 
@@ -91,7 +145,17 @@ CREDIT_HOUR_FEE DECIMAL(30,2) NOT NULL
 );
 
 INSERT INTO OUT_STATE_FEE_CODES VALUES(1,850.00);
+INSERT INTO OUT_STATE_FEE_CODES VALUES(2,1050.00);
+INSERT INTO OUT_STATE_FEE_CODES VALUES(3,750.00);
 
+/*TO SELECT all the data from OUT_STATE_FEE_CODES table, use this query:*/
+SELECT * FROM OUT_STATE_FEE_CODES;
+
+/*
+The DEGREE_LEVEL Table will maintain all the available degree levels that the University could potentially offer.
+Even though the University does NOT necessarily offer all the degree programs at all the levels currently, 
+the University must still be able to maintain the possible degree levels, it could offer in future, using this table.
+*/
 DROP TABLE IF EXISTS DEGREE_LEVEL CASCADE;
 
 CREATE TABLE DEGREE_LEVEL(LEVEL INTEGER NOT NULL PRIMARY KEY,LEVEL_NAME CHAR(50) NOT NULL);
@@ -100,7 +164,11 @@ INSERT INTO DEGREE_LEVEL VALUES(2,'MASTERS DEGREE');
 INSERT INTO DEGREE_LEVEL VALUES(3,'Ph.D');
 INSERT INTO DEGREE_LEVEL VALUES(4,'Post Doc.');
 
+/*To SELECT all the degree levels available use the following query*/
 SELECT * FROM DEGREE_LEVEL;
+
+
+/*The DEGREES_OFFERED Table will maintain all the degrees the University currently offers*/
 
 DROP TABLE IF EXISTS DEGREES_OFFERED CASCADE;
 
@@ -109,13 +177,15 @@ CREATE TABLE DEGREES_OFFERED
  DEGREE_ID INTEGER NOT NULL PRIMARY KEY,
  CREDIT_HOURS INTEGER NOT NULL,
  IN_STATE_FEE_ID INTEGER NOT NULL REFERENCES IN_STATE_FEE_CODES(FEE_ID),
- OUT_STATE_FEE_CODES INTEGER NOT NULL REFERENCES OUT_STATE_FEE_CODES(FEE_ID),
+ OUT_STATE_FEE_ID INTEGER NOT NULL REFERENCES OUT_STATE_FEE_CODES(FEE_ID),
  AVAILABLE_ONLINE CHAR(1) NOT NULL CONSTRAINT CHK_1 CHECK(AVAILABLE_ONLINE IN ('Y','N')),
  AVAILABLE_CLASS_ROOM CHAR(1) NOT NULL CONSTRAINT CHK_2 CHECK(AVAILABLE_CLASS_ROOM IN ('Y','N')),
  DEGREE_NAME CHAR(100) NOT NULL,
  DEGREE_LEVEL INTEGER NOT NULL REFERENCES DEGREE_LEVEL(LEVEL)
 );
 
+
+/*Insert some data into the degrees offeres table*/
 INSERT INTO DEGREES_OFFERED VALUES
 (
 1,60,1,1,'Y','Y','Business Administration',1);
@@ -123,15 +193,28 @@ INSERT INTO DEGREES_OFFERED VALUES
 
 INSERT INTO DEGREES_OFFERED VALUES
 (
-2,40,1,1,'Y','Y','Business Administration',2);
-
+2,40,2,2,'Y','Y','Business Administration',2);
 
 INSERT INTO DEGREES_OFFERED VALUES
 (
-3,36,1,1,'Y','N','Data Analytics',2);
+3,36,3,3,'Y','N','Data Analytics',2);
 
+/* To select the degrees offered, use this query.*/
 select * from DEGREES_OFFERED;
 
+
+/*The above query will not display meaningful information, since everything is displayed in codes. To see some meaningful information
+use the folliwng query. This query will list the degrees offered, levels (Masters/Bachelors etc, if the degree available online or offline or both and
+finally the in-state and out-state fee per credit hour)*/
+
+SELECT A.DEGREE_NAME, B.LEVEL_NAME, A.AVAILABLE_ONLINE,
+A.AVAILABLE_CLASS_ROOM, C.CREDIT_HOUR_FEE IN_STATE_FEE_PER_CREDIT_HR,D.CREDIT_HOUR_FEE OUT_STATE_FEE_PER_CREDIT_HR
+FROM
+DEGREES_OFFERED A, DEGREE_LEVEL B, IN_STATE_FEE_CODES C, OUT_STATE_FEE_CODES D
+WHERE A.DEGREE_LEVEL = B.LEVEL AND A.IN_STATE_FEE_ID = C.FEE_ID AND A.OUT_STATE_FEE_ID = D.FEE_ID;
+
+
+/*The DEGREE_PRE_REQUISITES Table will associate the pre-requisite degrees acceptable for admission into various degree programs at the University*/
 DROP TABLE IF EXISTS DEGREE_PRE_REQUISITES CASCADE;
 
 CREATE TABLE DEGREE_PRE_REQUISITES
@@ -142,6 +225,8 @@ CONSTRAINT DEGREE_PRE_REQ_PK PRIMARY KEY(DEGREE_ID,EDUCATION_ID),
 CONSTRAINT DEGREE_PRE_REQ_FK1 FOREIGN KEY(DEGREE_ID) REFERENCES DEGREES_OFFERED,
 CONSTRAINT DEGREE_PRE_REQ_FK2 FOREIGN KEY(EDUCATION_ID) REFERENCES EDUCATION_LEVELS
 );
+
+/*Insert some sample data into DEGREE_PRE_REQUISITES Table*/
 
 INSERT INTO DEGREE_PRE_REQUISITES
 VALUES
@@ -170,10 +255,15 @@ VALUES
   3,5
 );
 
-SELECT * FROM DEGREE_PRE_REQUISITES;
+
+/*To determine all the pre-requisite degrees needed for all the offered degree programs at the University, Use the following query*/
 SELECT A.DEGREE_NAME, D.LEVEL_NAME,B.EDUCATION_DESCRIPTION ENROLLMENT_PRE_REQ FROM DEGREES_OFFERED A,
 EDUCATION_LEVELS B, DEGREE_PRE_REQUISITES C, DEGREE_LEVEL D
 WHERE A.DEGREE_ID =  C.DEGREE_ID AND B.EDUCATION_ID = C.EDUCATION_ID AND D.LEVEL = A.DEGREE_LEVEL;
+
+
+
+/*The STUDENT_PROFILE Table will maintain information about the students, who create a student profile. */
 
 DROP TABLE IF EXISTS STUDENT_PROFILE CASCADE;
 
@@ -216,6 +306,13 @@ CREATE TABLE STUDENT_PROFILE
 INSERT INTO STUDENT_PROFILE VALUES
   (
   4, 'JEFF',NULL,'SHIAU','XEN AV',NULL,'SHANGHAI','EA', 'CHINA','XRRR', '123@DUMMY.COM',NULL,'M',3,41,current_timestamp,current_timestamp);
+
+
+INSERT INTO STUDENT_PROFILE VALUES
+  (
+  5, 'DIANA',NULL,'YATES','EMERALD AVE',NULL,'ROCHESTER','MI', 'USA','48091', '123@DUMMY.COM',NULL,'F',6,204,current_timestamp,current_timestamp);
+
+SELECT * FROM STUDENT_PROFILE;
 
 DROP TABLE IF EXISTS STUDENT_APPLICATION CASCADE;
 
@@ -268,14 +365,45 @@ VALUES
 
 
 /*To find students who qualify for subsidized fee*/
-SELECT A.FIRST_NAME, A.LAST_NAME, B.COUNTRY_NAME AS COUNTRY_OF_CITIZENSHIP, A.COUNTRY AS CURRENT_COUNTRY, C.INCOME_CLASS, CASE WHEN C.INCOME_CLASS = 'LOW' THEN 'YES' ELSE 'NO'
-END AS QUALIFIES_FOR_SUBSIDY
+SELECT A.STUDENT_ID, A.FIRST_NAME, A.LAST_NAME, 
+CASE WHEN C.INCOME_CLASS = 'LOW' THEN 'YES' ELSE 'NO'
+END AS QUALIFIES_FOR_SUBSIDY, C.INCOME_CLASS,
+B.COUNTRY_NAME AS COUNTRY_OF_CITIZENSHIP, A.COUNTRY AS CURRENT_COUNTRY
 FROM STUDENT_PROFILE A, COUNTRY_INCOME_CLASSIFICATION B, INCOME_CODES C
 WHERE A.COUNTRY_OF_CITIZENSHIP = B.COUNTRY_ID AND
-C.INCOME_ID = B.INCOME_ID;
+C.INCOME_ID = B.INCOME_ID
+ORDER BY 1;
 
-/*To find degrees offered, degree level and enrollment requisites*/
-SELECT * FROM DEGREE_PRE_REQUISITES;
+/*To find which student applied for which degree program, along with the application status
+This query does not display the students who have created student profile, but did not apply to any degree program yet, like the student (DIANA YATES, student_ID: 5)*/
+
+SELECT D.STUDENT_ID, D.FIRST_NAME, D.LAST_NAME, B.DEGREE_NAME AS APPLIED_TO, E.LEVEL_NAME AS DEGREE_LEVEL, C.STATUS_DESCRIPTION   
+FROM 
+STUDENT_APPLICATION A, DEGREES_OFFERED B, APPLICATION_STATUS_CODES C, STUDENT_PROFILE D, DEGREE_LEVEL E 
+WHERE A.STUDENT_ID = D.STUDENT_ID AND 
+A.DEGREE_ID = B.DEGREE_ID AND A.STATUS_ID = C.STATUS_ID AND E.LEVEL = B.DEGREE_LEVEL
+ORDER BY 1;
+
+/*You can use the above query with little modification, to find all the students who have created their profiles, but did not apply for any program yet.
+  If you do LEFT OUTER JOIN of STUDENT_PROFILE with the above query, then for students who ever did NOT apply for any program, but just created the profile
+  will be displayed with NULL Values. But these NULL values can be handled using COALESCE function, to display a meaningful value, instead of NULL. In the 
+  following example, I displayed the statement "---NOT APPLIED YET ---"
+*/
+
+SELECT A.STUDENT_ID, A.FIRST_NAME, A.LAST_NAME, COALESCE(B.APPLIED_TO,'---NOT YET APPLIED YET ---') AS APPLIED_TO, 
+COALESCE(B.DEGREE_LEVEL,'---NOT YET APPLIED YET ---') DEGREE_LEVEL,
+COALESCE(B.STATUS_DESCRIPTION,'---NOT APPLIED YET ---') STATUS_DESCRIPTION   
+FROM STUDENT_PROFILE A LEFT OUTER JOIN 
+(SELECT D.STUDENT_ID, D.FIRST_NAME, D.LAST_NAME, B.DEGREE_NAME AS APPLIED_TO, E.LEVEL_NAME AS DEGREE_LEVEL, C.STATUS_DESCRIPTION   
+FROM 
+STUDENT_APPLICATION A, DEGREES_OFFERED B, APPLICATION_STATUS_CODES C, STUDENT_PROFILE D, DEGREE_LEVEL E 
+WHERE A.STUDENT_ID = D.STUDENT_ID AND 
+A.DEGREE_ID = B.DEGREE_ID AND A.STATUS_ID = C.STATUS_ID AND E.LEVEL = B.DEGREE_LEVEL) B ON A.STUDENT_ID = B.STUDENT_ID
+ORDER BY 1;
+
+
+/*To find degrees offered, degree level and enrollment PRE-requisites*/
+
 SELECT A.DEGREE_NAME, D.LEVEL_NAME,B.EDUCATION_DESCRIPTION ENROLLMENT_PRE_REQ FROM DEGREES_OFFERED A,
 EDUCATION_LEVELS B, DEGREE_PRE_REQUISITES C, DEGREE_LEVEL D
 WHERE A.DEGREE_ID =  C.DEGREE_ID AND B.EDUCATION_ID = C.EDUCATION_ID AND D.LEVEL = A.DEGREE_LEVEL;
