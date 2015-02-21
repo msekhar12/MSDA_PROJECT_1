@@ -1,45 +1,105 @@
-
-
 /*
 
-STUDENT DATABASE:
-The main idea of this project is to construct a student database for an University, which helps in the process of student admission (or application phase).
+STUDENT DATABASE
+
+Business Requirements:
+
+The main idea of this project is to construct a student database for a University, to manage the data related to the student application process.
 
 I have assumed the following requirements:
 
-1. The University must be able to maintain the degrees information (Degree names like Data Analytics, Degree level - Bachelor/Master/PhD/Post Doc etc.
-2. For each degree offered, the University must be able to maintain information on acceptable pre-requisite degrees for admission into the offered degrees.
-3. The University must be able to maintain the fee details (both In-state, Out-state fee) for each degree it offers. For instance, in most of the Universities, the fees for MBA degree
-   is more than other Master programs. So the University must be able to maintain different fees for different programs. 
-4. The University offers subsidized fee (in-state fee) for International students, whose country of citizenship is an under developed country. The University will obtain the
-   various countries and their per-capita details anually, and classify the countries into 4 groups - LOW, LOWER MIDDLE, UPPER MIDDLE and HIGH Incomes. Students whose citizenship is from
-   LOW per-capita countries, are offered In-State fee, by default.The University obtains the countries information from the following website:
-   "http://www.iawp.org/joiniawp/countrylist.htm". (A program in R will be built to parse the data from this website, and load the countries information into one of the tables)
-5. The database must store prospective applicant details (such as his first name, middle initial, last name, address, city, state, country (where he currently lives), country
-   of citizenship.
+1. The University must be able to maintain the degrees information (Degree names like Data Analytics, and Degree level such as Bachelor/Master/PhD/Post Doc etc.) that it offers to the prospective students
+
+2. For each degree offered, the University must be able to maintain information on acceptable pre-requisite degrees for admission into the offered degree programs. 
+
+3. The University must be able to maintain the fee details (both In-state, Out-state fee) for each degree it offers. For instance, in most of the Universities, the fees for MBA degree is more than other Master programs. So the University must be able to maintain different fees for different programs. 
+
+4. The University offers subsidized fee (in-state fee) for some International students, whose country of citizenship is an under developed country. The University will obtain the list of various countries and their per-capita details annually, and classify the countries into 4 groups - LOW, LOWER MIDDLE, UPPER MIDDLE and HIGH Incomes. Students whose citizenship is from "LOW" per-capita countries, are offered In-State fee, by default. The University obtains the countries information from the following website:
+
+http://www.iawp.org/joiniawp/countrylist.htm
+
+(A program in R will be built to parse the data from this website, and load the countries information into one of the tables)
+
+5. The database must store prospective applicant details (such as his first name, middle initial, last name, address, city, state, country (where he currently lives), and his country of citizenship. The country of citizenship will help the University to decide whether the student should be offered In-state fee or not.
+
 6. Each prospective applicant must be able to apply to more than one programs (if desired).
+
 7. Each prospective student must be able to track his application status.
+
 9. Each prospective student must be able to withdraw his application, and the student details must be deleted from the system.
+10. The University should be able to store whether the degree is available online or class or both.
 
-NOTE:
-1. If you query just the individual tables, then you may not get information that makes sense, since all the tables are tightly coupled by REFERENTIAL INTEGRITY Constraints.
-Hence you have to join the required tables using Primary Key and Foreign Key relationships, in order to get meaningful information. The attached data model (physical) can be used 
-to obtain information on how to join tables to get meaningful information.
+Here are the list of 11 tables I will be building (as per physical data model), to support Student application system business requirements given above:
 
-2. Just for your convinience, I am including some useful queries after each table creation. Please follow the embedded comments while you review the DDL.
-3. Some additional queries are provided at the end of the Definitions statements.
+1.	APPLICATION_STATUS_CODES
+This table stores various application status codes, such as "Application Created", "Application Submitted" etc.
+
+2.	EDUCATION_LEVELS 
+This table stores all the education levels, such as "High School", "Bachelors" etc.
+
+3.	INCOME_CODES
+This table stores all the Income codes, such as LOW, HIGH, LOWER MIDDLE etc.
+
+4.	COUNTRY_INCOME_CLASSIFICATION
+This table stores all the countries and their Income levels. This table will be used to determine if a student belongs to LOW Income country
+
+5.	IN_STATE_FEE_CODES
+This table will store all the fee codes of in-state fee. The codes will be referenced by other tables to represent in-state fee
+
+6.	OUT_STATE_FEE_CODES
+This table will store all the fee codes of out-state fee. The codes will be referenced by other tables to represent out-state fee
+
+7.	DEGREE_LEVEL
+This table stores the degree levels, such as BACHELOR, MASTER, PhD. etc.
+
+8.	DEGREES_OFFERED
+This table stores the degrees offered by the University.
+
+9.	DEGREE_PRE_REQUISITES
+This table stores the acceptable education levels for admission into each degree offered.
+
+10.	STUDENT_PROFILE 
+This table stores all the student details
+
+11.	STUDENT_APPLICATION
+This table stores all the applications information, when a student applies to various degree programs.
+
+NOTE on relationships: 
+1. At the logical level, there is a Many-To-Many relationship between Education_Codes and Degrees_Offered. A student can obtain admission into a degree program with multiple levels of education, and the same education level can be referenced by more than one degree program. Hence the Many-To-Many relationship between Education_Codes and Degrees_Offered entities. At the physical level, this relationship is broken into One-To-Many relationships, since Many-To-Many relationships cannot be represented at physical level, without an associate table. In this example, the Many-To-Many relationship between Education_Codes and Degrees_Offered is broken down into 3 tables (at physical level): Degrees_Offered, Degree_Pre_Requisites and Education_Levels. The Degrees_Offered table will contain degrees list, Education_Levels will contain all the education levels, and the associate table - Degree_Pre_Requisites, will map the acceptable education levels to various degree programs at the University. For instance, the University can accept students with Bachelor degree (of 3 years) and Bachelor’s Degree (of 4 years) into its MBA program, while the Masters in Data Analytics program needs Bachelor’s degree (of 4 years). All such information is represented by three tables: Degrees_Offered, Degree_Pre_Requisites and Education_Levels
+
+2. Among all other entities in the logical and physical models, we have One-To-Many relationships. Please refer to the attached "student Database Design.pdf" document for logical and physical database design. The document can be found at 
+
+https://github.com/msekhar12/MSDA_PROJECT_1.git
+
+All the reporting queries will be listed at the end of this document, as the last section. REPROTING QUERIES.
+
+Between STUDENT_PROFILE and STUDENT_APPLICATION Tables, we have One-To-Many relationship, with ON DELETE CASCADE rule for foreign key. Hence if a student profile is deleted from STUDENT_PROFILE Table, then it will have a cascading effect on STUDENT_APPLICATION Table, and all the relevant rows from STUDENT_APPLICATION will also be deleted. Except for this relationship, all other relationships are ON DELETE RESTRICT.
+
 */
+
+
+
+
+
 
 
 
 /* The DDL - Data Definition Language statements follow */
 
-/*Create APPLICATION_STATUS_CODES Table*/
+/*Create Table: 1 - APPLICATION_STATUS_CODES Table*/
+
 DROP TABLE IF EXISTS APPLICATION_STATUS_CODES CASCADE;
+
 CREATE TABLE APPLICATION_STATUS_CODES(STATUS_ID INTEGER NOT NULL PRIMARY KEY,STATUS_DESCRIPTION CHAR(60) NOT NULL);
 
-/*The application status table, will maintain various application statuses. The current system will maintain 5 application statuses:
-1. APPLICATION CREATED  2. APPLICATION SUBMITTED, 3. WAITING FOR PENDING DOCUMENTS, 4. APPLICATION UNDER REVIEW, 5. DECISION AVAILABLE
+/*
+The application status table, will maintain various application statuses. The current system will maintain 5 application statuses:
+1. APPLICATION CREATED  
+2. APPLICATION SUBMITTED 
+3. WAITING FOR PENDING DOCUMENTS
+4. APPLICATION UNDER REVIEW 
+5. DECISION AVAILABLE
+
 The University can add any new application statuses, if needed, by inserting data into this table.
 */
 
@@ -49,14 +109,21 @@ INSERT INTO APPLICATION_STATUS_CODES VALUES(3,'WAITING FOR PENDING DOCUMENTS');
 INSERT INTO APPLICATION_STATUS_CODES VALUES(4,'APPLICATION UNDER REVIEW');
 INSERT INTO APPLICATION_STATUS_CODES VALUES(5,'DECISION AVAILABLE');
 
-/*To display all the application status codes use the following query*/
-SELECT * FROM  APPLICATION_STATUS_CODES;
-
-/*The EDUCATION_LEVELS table will maintain all the education levels, that any typical applicant would have. This table will also be useful to maintain the pre-requisite
- education needed for various degree programs the University offers.
+/*
+To display all the application status codes use the following query
 */
+SELECT * FROM APPLICATION_STATUS_CODES;
+
+/* CREATE Table: 2 - EDUCATION_LEVELS */
+
+/*The EDUCATION_LEVELS table will maintain all the education levels, that any typical applicant would have. This table will also be useful to maintain the pre-requisite education needed for various degree programs the University offers.
+*/
+
 DROP TABLE IF EXISTS EDUCATION_LEVELS CASCADE;
+
 CREATE TABLE EDUCATION_LEVELS(EDUCATION_ID INTEGER NOT NULL PRIMARY KEY,EDUCATION_DESCRIPTION VARCHAR(250) NOT NULL);
+
+/* Insert education levels information into EDUCATION_LEVELS Table*/
 
 INSERT INTO EDUCATION_LEVELS VALUES(1,'NO HIGH SCHOOL');
 INSERT INTO EDUCATION_LEVELS VALUES(2,'HIGH SCHOOL');
@@ -67,8 +134,11 @@ INSERT INTO EDUCATION_LEVELS VALUES(6,'MASTERS DEGREE');
 INSERT INTO EDUCATION_LEVELS VALUES(7,'Ph. D');
 INSERT INTO EDUCATION_LEVELS VALUES(8,'Post Doctorate');
 
-/*To display all the Education levels, use this query*/
+/* To display all the Education levels, use this query*/
+
 SELECT * FROM EDUCATION_LEVELS;
+
+/*CREATE Table: 3 – INCOME_CODES*/
 
 /*The INCOME_CODES Table will maintain various income levels available. The University can add any new Income levels, if needed in future*/
 
@@ -77,18 +147,66 @@ DROP TABLE IF EXISTS INCOME_CODES CASCADE;
 CREATE TABLE INCOME_CODES(INCOME_ID INTEGER NOT NULL PRIMARY KEY,
 INCOME_CLASS CHAR(60) NOT NULL);
 
+/*Insert data into INCOME_CODES*/
+
 INSERT INTO INCOME_CODES VALUES(1,'HIGH INCOME');
 INSERT INTO INCOME_CODES VALUES(2,'UPPER MIDDLE');
 INSERT INTO INCOME_CODES VALUES(3,'LOWER MIDDLE');
 INSERT INTO INCOME_CODES VALUES(4,'LOW');
 
 /*To get the current data from INCOME_CODES Table, use this query*/
+
 SELECT * FROM INCOME_CODES;
+/* CREATE Table: 4 - COUNTRY_INCOME_CLASSIFICATION */
 
 /*The COUNTRY_INCOME_CLASSIFICATION Table will maintain information about all the countries in the world, and the country classification
- - LOW or HIGH or UPPER MIDDLE or LOWER MIDDLE, depending on the percapita income. This table will be loaded periodically by parsing the data from the following website:
+ - LOW or HIGH or UPPER MIDDLE or LOWER MIDDLE, depending on the per-capita income. This table will be loaded periodically by parsing the data from the following website:
 
- "http://www.iawp.org/joiniawp/countrylist.htm". (An program in R will be built to parse the data from this website, and load the countries information into one of the tables)
+ http://www.iawp.org/joiniawp/countrylist.htm
+
+The following R-Program Code can scrape the data present at the above website, and create a file (CSV) that can be readily loaded into the table COUNTRY_INCOME_CLASSIFICATION
+
+The following R-CODE Must be executed from R-Studio, and NOT from the PostgreSql Editor. The R following R-Code can be downloaded from my github folder (in the file name Parse_Income_levels.R):
+
+https://github.com/msekhar12/MSDA_PROJECT_1.git
+
+
+#Install the XML Package, if needed, using the following command
+#install.packages("XML")
+
+#This function will parse the data from the website: "http://www.iawp.org/joiniawp/countrylist.htm"
+#and creates a file which can be loaded into a postgres table.
+
+library("XML")
+
+u <- "http://www.iawp.org/joiniawp/countrylist.htm"
+tbls <- readHTMLTable(u,which=1,colClasses=c("integer","character","character","character","character"))
+#We are interested in the following rows and columns only
+tbls[6:213,c(3,4,7)]
+
+#Cleanse the data 
+# tbls$class <- ifelse(grepl("Lower middle",tbls[,7]),'Lower Middle',tbls[,7])
+# tbls$class <- ifelse(grepl("High income",tbls[,7]),'High Income',tbls$class)
+# tbls$class <- ifelse(grepl("Upper middle",tbls[,7]),'Upper Middle',tbls$class)
+# tbls$class <- ifelse(grepl("Low income",tbls[,7]),'Low',tbls$class)
+
+ tbls$class <- ifelse(grepl("Lower middle",tbls[,7]),3,tbls[,7])
+ tbls$class <- ifelse(grepl("High income",tbls[,7]),1,tbls$class)
+ tbls$class <- ifelse(grepl("Upper middle",tbls[,7]),2,tbls$class)
+ tbls$class <- ifelse(grepl("Low income",tbls[,7]),4,tbls$class)
+
+
+tbls[6:213,c(3,4,7,10)]
+
+#Move the desired columns to another data frame
+tbls_mod <- tbls[6:213,c(3,4,10)]
+names(tbls_mod) <- c("Country", "Country_Code","Income Classification")
+
+#Clean any unnecessary commas in col1
+tbls_mod[,1] <- gsub("\\, The","",tbls_mod[,1])
+tbls_mod[,1] <- gsub("\\,","",tbls_mod[,1])
+write.csv(tbls_mod,file = "income_levels.csv", quote=F,row.names=F)
+
 
 */
 
@@ -96,15 +214,18 @@ DROP TABLE IF EXISTS COUNTRY_INCOME_CLASSIFICATION CASCADE;
 
 CREATE TABLE COUNTRY_INCOME_CLASSIFICATION(COUNTRY_ID SERIAL PRIMARY KEY, COUNTRY_CODE CHAR(10) NOT NULL,
 COUNTRY_NAME VARCHAR(254) NOT NULL, INCOME_ID INTEGER NOT NULL,
-CONSTRAINT INCOME_ID_FK FOREIGN KEY(INCOME_ID) REFERENCES INCOME_CODES(INCOME_ID)
+CONSTRAINT INCOME_ID_FK FOREIGN KEY(INCOME_ID) REFERENCES INCOME_CODES(INCOME_ID) ON DELETE RESTRICT
 );
 
-/*Use the following COPY Command to LOAD the CSV File into the COUNTRY_INCOME_CLASSIFICATION. The input CSV file will be created by an R Program, by parsing the data from
-the website: "http://www.iawp.org/joiniawp/countrylist.htm"
+/*Use the following COPY Command to LOAD the CSV File into the COUNTRY_INCOME_CLASSIFICATION. The input CSV file will be created by an R Program, by parsing the data from the website: 
 
-NOTE that the generated CSV File must be stored at the location to which the LOAD Job has access to. Also the permissions on the CSV file must be changed to at least READ 
-(in Unix 666 or 777). In Windows, the file permissions can be changed, by right clicking on the file, and sharing the file with everyone or to specific Users who would 
-load the CSV file to the COUNTRY_INCOME_CLASSIFICATION Table.
+http://www.iawp.org/joiniawp/countrylist.htm
+
+NOTE: The R-Code is given in the previous comment above. Or you can also get the R-Code used from the file Parse_Income_levels.R in the following Git location
+
+https://github.com/msekhar12/MSDA_PROJECT_1.git
+
+NOTE that the generated CSV File must be stored at the location to which the LOAD Job has access to. Also the permissions on the CSV file must be changed to at least to READ. In Unix, you may use the command: chmod 666 <file_name> or chmod 777 <file_name>. In Windows, the file permissions can be changed, by right clicking on the file, and sharing the file with everyone or to specific Users who would load the CSV file to the COUNTRY_INCOME_CLASSIFICATION Table.
 
 */
 
@@ -113,11 +234,21 @@ FROM 'C:\Users\Sekhar\Documents\CUNY\607 Assignments\income_levels.CSV' DELIMITE
 
 
 /*The following query will display all the countries and their income classifications*/
+
 SELECT A.COUNTRY_ID, A.COUNTRY_CODE, A.COUNTRY_NAME, A.INCOME_ID, B.INCOME_CLASS 
 FROM 
 COUNTRY_INCOME_CLASSIFICATION A, INCOME_CODES B WHERE A.INCOME_ID = B.INCOME_ID;
 
+
+
+
+
+
+
+
+/*CREATE TABLE: 5 - IN_STATE_FEE_CODES */
 /*The IN_STATE_FEE_CODES will maintain the in-state fee information*/
+
 DROP TABLE IF EXISTS IN_STATE_FEE_CODES CASCADE;
 
 CREATE TABLE IN_STATE_FEE_CODES
@@ -126,15 +257,19 @@ FEE_ID INTEGER NOT NULL PRIMARY KEY,
 CREDIT_HOUR_FEE DECIMAL(30,2) NOT NULL
 );
 
+/*Insert some sample data*/
+
 INSERT INTO IN_STATE_FEE_CODES VALUES(1,450.00);
 INSERT INTO IN_STATE_FEE_CODES VALUES(2,650.00);
 INSERT INTO IN_STATE_FEE_CODES VALUES(3,350.00);
 
 /*TO SELECT all the data from IN_STATE_FEE_CODES table, use this query:*/
+
 SELECT * FROM IN_STATE_FEE_CODES;
 
+/*CREATE TABLE: 6 - OUT_STATE_FEE_CODES */
 
-/*The Out_STATE_FEE_CODES will maintain the Out-state fee information*/
+/*The OUT_STATE_FEE_CODES will maintain the Out-state fee information*/
 
 DROP TABLE IF EXISTS OUT_STATE_FEE_CODES CASCADE;
 
@@ -144,29 +279,44 @@ FEE_ID INTEGER NOT NULL PRIMARY KEY,
 CREDIT_HOUR_FEE DECIMAL(30,2) NOT NULL
 );
 
+/*Insert some sample data*/
+
 INSERT INTO OUT_STATE_FEE_CODES VALUES(1,850.00);
 INSERT INTO OUT_STATE_FEE_CODES VALUES(2,1050.00);
 INSERT INTO OUT_STATE_FEE_CODES VALUES(3,750.00);
 
 /*TO SELECT all the data from OUT_STATE_FEE_CODES table, use this query:*/
+
 SELECT * FROM OUT_STATE_FEE_CODES;
+
+
+
+
+
+
+/*CREATE TABLE: 7 – DEGREE_LEVEL */
 
 /*
 The DEGREE_LEVEL Table will maintain all the available degree levels that the University could potentially offer.
-Even though the University does NOT necessarily offer all the degree programs at all the levels currently, 
-the University must still be able to maintain the possible degree levels, it could offer in future, using this table.
+
+Even though the University does NOT necessarily offer all the degree programs at all the levels currently, the University must still be able to maintain the possible degree levels, it could offer in future, using this table.
 */
 DROP TABLE IF EXISTS DEGREE_LEVEL CASCADE;
 
 CREATE TABLE DEGREE_LEVEL(LEVEL INTEGER NOT NULL PRIMARY KEY,LEVEL_NAME CHAR(50) NOT NULL);
+
+/*Insert some sample data*/
+
 INSERT INTO DEGREE_LEVEL VALUES(1,'BACHELOR DEGREE');
 INSERT INTO DEGREE_LEVEL VALUES(2,'MASTERS DEGREE');
 INSERT INTO DEGREE_LEVEL VALUES(3,'Ph.D');
 INSERT INTO DEGREE_LEVEL VALUES(4,'Post Doc.');
 
 /*To SELECT all the degree levels available use the following query*/
+
 SELECT * FROM DEGREE_LEVEL;
 
+/* CREATE TABLE: 8 - DEGREES_OFFERED */
 
 /*The DEGREES_OFFERED Table will maintain all the degrees the University currently offers*/
 
@@ -185,7 +335,8 @@ CREATE TABLE DEGREES_OFFERED
 );
 
 
-/*Insert some data into the degrees offeres table*/
+/*Insert some data into the degrees offered table*/
+
 INSERT INTO DEGREES_OFFERED VALUES
 (
 1,60,1,1,'Y','Y','Business Administration',1);
@@ -200,12 +351,12 @@ INSERT INTO DEGREES_OFFERED VALUES
 3,36,3,3,'Y','N','Data Analytics',2);
 
 /* To select the degrees offered, use this query.*/
-select * from DEGREES_OFFERED;
+
+SELECT * FROM DEGREES_OFFERED;
 
 
 /*The above query will not display meaningful information, since everything is displayed in codes. To see some meaningful information
-use the folliwng query. This query will list the degrees offered, levels (Masters/Bachelors etc, if the degree available online or offline or both and
-finally the in-state and out-state fee per credit hour)*/
+use the following query. This query will list the degrees offered, levels (Masters/Bachelors etc., if the degree available online or offline or both and finally the in-state and out-state fee per credit hour)*/
 
 SELECT A.DEGREE_NAME, B.LEVEL_NAME, A.AVAILABLE_ONLINE,
 A.AVAILABLE_CLASS_ROOM, C.CREDIT_HOUR_FEE IN_STATE_FEE_PER_CREDIT_HR,D.CREDIT_HOUR_FEE OUT_STATE_FEE_PER_CREDIT_HR
@@ -213,8 +364,10 @@ FROM
 DEGREES_OFFERED A, DEGREE_LEVEL B, IN_STATE_FEE_CODES C, OUT_STATE_FEE_CODES D
 WHERE A.DEGREE_LEVEL = B.LEVEL AND A.IN_STATE_FEE_ID = C.FEE_ID AND A.OUT_STATE_FEE_ID = D.FEE_ID;
 
+/*CREATE Table: 9 - DEGREE_PRE_REQUISITES */
 
 /*The DEGREE_PRE_REQUISITES Table will associate the pre-requisite degrees acceptable for admission into various degree programs at the University*/
+
 DROP TABLE IF EXISTS DEGREE_PRE_REQUISITES CASCADE;
 
 CREATE TABLE DEGREE_PRE_REQUISITES
@@ -257,12 +410,13 @@ VALUES
 
 
 /*To determine all the pre-requisite degrees needed for all the offered degree programs at the University, Use the following query*/
+
 SELECT A.DEGREE_NAME, D.LEVEL_NAME,B.EDUCATION_DESCRIPTION ENROLLMENT_PRE_REQ FROM DEGREES_OFFERED A,
 EDUCATION_LEVELS B, DEGREE_PRE_REQUISITES C, DEGREE_LEVEL D
 WHERE A.DEGREE_ID =  C.DEGREE_ID AND B.EDUCATION_ID = C.EDUCATION_ID AND D.LEVEL = A.DEGREE_LEVEL;
 
 
-
+/*CREATE Table 10 - STUDENT_PROFILE */
 /*The STUDENT_PROFILE Table will maintain information about the students, who create a student profile. */
 
 DROP TABLE IF EXISTS STUDENT_PROFILE CASCADE;
@@ -312,7 +466,13 @@ INSERT INTO STUDENT_PROFILE VALUES
   (
   5, 'DIANA',NULL,'YATES','EMERALD AVE',NULL,'ROCHESTER','MI', 'USA','48091', '123@DUMMY.COM',NULL,'F',6,204,current_timestamp,current_timestamp);
 
+/*Select data from STUDENT_PROFILE*/
+
 SELECT * FROM STUDENT_PROFILE;
+
+/*CREATE Table: 11 - STUDENT_APPLICATION */
+
+/*This table will map the students and the degrees to which they have applied to. This is an associate table*/
 
 DROP TABLE IF EXISTS STUDENT_APPLICATION CASCADE;
 
@@ -329,6 +489,8 @@ CONSTRAINT STUDENT_APP_FK_2 FOREIGN KEY(STATUS_ID) REFERENCES APPLICATION_STATUS
 CONSTRAINT STUDENT_APP_FK_3 FOREIGN KEY(STUDENT_ID) REFERENCES STUDENT_PROFILE ON DELETE CASCADE,
 CONSTRAINT STUDENT_APP_FK_4 FOREIGN KEY(DEGREE_ID) REFERENCES DEGREES_OFFERED ON DELETE RESTRICT
 );
+
+/*Insert some sample data*/
 
 INSERT INTO STUDENT_APPLICATION
 VALUES 
@@ -362,9 +524,23 @@ VALUES
 4,1,5,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP
 );
 
+/*REPROTING QUERIES*/
 
 
-/*To find students who qualify for subsidized fee*/
+
+/*
+QUERY_1:
+To find students who qualify for subsidized fee, use the following query. The column "qualifies_for_subsidy" shows if the student is eligible for in_state fee or not.
+ 
+In this query's output, you can observe that one student qualifies for subsidized fee, since his country of citizenship is Kenya, and Kenya is a LOW income country.
+
+This query uses the following 3 tables:
+STUDENT_PROFILE
+COUNTRY_INCOME_CLASSIFICATION
+INCOME_CODES
+
+*/
+
 SELECT A.STUDENT_ID, A.FIRST_NAME, A.LAST_NAME, 
 CASE WHEN C.INCOME_CLASS = 'LOW' THEN 'YES' ELSE 'NO'
 END AS QUALIFIES_FOR_SUBSIDY, C.INCOME_CLASS,
@@ -374,25 +550,83 @@ WHERE A.COUNTRY_OF_CITIZENSHIP = B.COUNTRY_ID AND
 C.INCOME_ID = B.INCOME_ID
 ORDER BY 1;
 
-/*To find which student applied for which degree program, along with the application status
-This query does not display the students who have created student profile, but did not apply to any degree program yet, like the student (DIANA YATES, student_ID: 5)*/
 
-SELECT D.STUDENT_ID, D.FIRST_NAME, D.LAST_NAME, B.DEGREE_NAME AS APPLIED_TO, E.LEVEL_NAME AS DEGREE_LEVEL, C.STATUS_DESCRIPTION   
-FROM 
-STUDENT_APPLICATION A, DEGREES_OFFERED B, APPLICATION_STATUS_CODES C, STUDENT_PROFILE D, DEGREE_LEVEL E 
-WHERE A.STUDENT_ID = D.STUDENT_ID AND 
-A.DEGREE_ID = B.DEGREE_ID AND A.STATUS_ID = C.STATUS_ID AND E.LEVEL = B.DEGREE_LEVEL
-ORDER BY 1;
 
-/*You can use the above query with little modification, to find all the students who have created their profiles, but did not apply for any program yet.
-  If you do LEFT OUTER JOIN of STUDENT_PROFILE with the above query, then for students who ever did NOT apply for any program, but just created the profile
-  will be displayed with NULL Values. But these NULL values can be handled using COALESCE function, to display a meaningful value, instead of NULL. In the 
-  following example, I displayed the statement "---NOT APPLIED YET ---"
+/* 
+QUERY_2:
+Using the Query-1, we can create another report, to get all the students who applied for various programs, the program names, the program level, the required credit hours, the credit hour fee, total program fee, and the student's country of citizenship.
+
+In this report you can find that 2 people (out of 5 people) have applied for the Business Administration degree at Bachelors level. One applicant is from Kenya, and the other from China. Since Kenya is a LOW income country, the applicant from Kenya is eligible for
+in-state-fee, and hence his fee is very lesser than the fee of Chinese applicant.
+
+This query uses the following tables 9 tables:
+
+STUDENT_APPLICATION
+APPLICATION_STATUS_CODES
+DEGREES_OFFERED
+DEGREE_LEVEL
+IN_STATE_FEE_CODES
+OUT_STATE_FEE_CODES
+STUDENT_PROFILE
+COUNTRY_INCOME_CLASSIFICATION
+INCOME_CODES
+
 */
 
-SELECT A.STUDENT_ID, A.FIRST_NAME, A.LAST_NAME, COALESCE(B.APPLIED_TO,'---NOT YET APPLIED YET ---') AS APPLIED_TO, 
-COALESCE(B.DEGREE_LEVEL,'---NOT YET APPLIED YET ---') DEGREE_LEVEL,
-COALESCE(B.STATUS_DESCRIPTION,'---NOT APPLIED YET ---') STATUS_DESCRIPTION   
+SELECT A.STUDENT_ID, A.FIRST_NAME, A.LAST_NAME, A.QUALIFIES_FOR_SUBSIDY,
+D.DEGREE_NAME AS APPLIED_TO, E.LEVEL_NAME AS APPLIED_DEGREE_LEVEL, C.STATUS_DESCRIPTION APPLICATION_STATUS,
+D.CREDIT_HOURS AS REQUIRED_CREDIT_HOURS,
+CASE WHEN A.QUALIFIES_FOR_SUBSIDY = 'YES' THEN F.CREDIT_HOUR_FEE 
+ELSE G.CREDIT_HOUR_FEE END AS PROGRAM_FEE_PER_CREDIT_HOUR, 
+CASE WHEN A.QUALIFIES_FOR_SUBSIDY = 'YES' THEN F.CREDIT_HOUR_FEE * D.CREDIT_HOURS 
+ELSE G.CREDIT_HOUR_FEE * D.CREDIT_HOURS END AS TOTAL_PROGRAM_FEE, 
+A.COUNTRY_OF_CITIZENSHIP 
+FROM
+(
+SELECT A.STUDENT_ID, A.FIRST_NAME, A.LAST_NAME, 
+CASE WHEN C.INCOME_CLASS = 'LOW' THEN 'YES' ELSE 'NO'
+END AS QUALIFIES_FOR_SUBSIDY, C.INCOME_CLASS,
+B.COUNTRY_NAME AS COUNTRY_OF_CITIZENSHIP, A.COUNTRY AS CURRENT_COUNTRY
+FROM STUDENT_PROFILE A, COUNTRY_INCOME_CLASSIFICATION B, INCOME_CODES C
+WHERE A.COUNTRY_OF_CITIZENSHIP = B.COUNTRY_ID AND
+C.INCOME_ID = B.INCOME_ID
+) AS A,
+
+STUDENT_APPLICATION B, APPLICATION_STATUS_CODES C, DEGREES_OFFERED D, DEGREE_LEVEL E,
+IN_STATE_FEE_CODES F, OUT_STATE_FEE_CODES G
+WHERE
+A.STUDENT_ID = B.STUDENT_ID AND
+B.STATUS_ID = C.STATUS_ID AND 
+B.DEGREE_ID = D.DEGREE_ID AND 
+D.DEGREE_LEVEL = E.LEVEL AND 
+D.IN_STATE_FEE_ID = F.FEE_ID AND
+D.OUT_STATE_FEE_ID = G.FEE_ID
+ORDER BY 1;
+
+
+/*
+QUERY_3:
+
+This query pulls all the students who have created a student profile, along with the details of whether the student has started working on any application or just has created the profile.
+
+This query uses a LEFT OUTER JOIN, and it returns NULL values for students who have created a student profile, but did not start application for any program. Such NULL values are handled by  
+COALESCE function, to display a meaningful message like "--- NOT APPLIED YET ---”
+
+This query uses the following 5 tables:
+STUDENT_APPLICATION
+DEGREES_OFFERED
+APPLICATION_STATUS_CODES
+STUDENT_PROFILE
+DEGREE_LEVEL 
+
+*/
+
+
+SELECT A.STUDENT_ID, A.FIRST_NAME, A.LAST_NAME, 
+COALESCE(B.STATUS_DESCRIPTION,'--- NOT APPLIED YET ---') APPLICATION_STATUS,
+COALESCE(B.APPLIED_TO,'---NOT YET APPLIED YET ---') AS APPLIED_TO, 
+COALESCE(B.DEGREE_LEVEL,'--- NOT YET APPLIED YET ---') DEGREE_LEVEL
+ 
 FROM STUDENT_PROFILE A LEFT OUTER JOIN 
 (SELECT D.STUDENT_ID, D.FIRST_NAME, D.LAST_NAME, B.DEGREE_NAME AS APPLIED_TO, E.LEVEL_NAME AS DEGREE_LEVEL, C.STATUS_DESCRIPTION   
 FROM 
@@ -402,9 +636,95 @@ A.DEGREE_ID = B.DEGREE_ID AND A.STATUS_ID = C.STATUS_ID AND E.LEVEL = B.DEGREE_L
 ORDER BY 1;
 
 
-/*To find degrees offered, degree level and enrollment PRE-requisites*/
+/*
+QUERY_4:
+
+To find degrees offered, degree level and enrollment PRE-requisites
+
+This query uses the following 4 tables:
+DEGREES_OFFERED
+EDUCATION_LEVELS
+DEGREE_PRE_REQUISITES
+DEGREE_LEVEL
+
+*/
 
 SELECT A.DEGREE_NAME, D.LEVEL_NAME,B.EDUCATION_DESCRIPTION ENROLLMENT_PRE_REQ FROM DEGREES_OFFERED A,
 EDUCATION_LEVELS B, DEGREE_PRE_REQUISITES C, DEGREE_LEVEL D
 WHERE A.DEGREE_ID =  C.DEGREE_ID AND B.EDUCATION_ID = C.EDUCATION_ID AND D.LEVEL = A.DEGREE_LEVEL;
 
+
+/*
+QUERY_5:
+
+This query will list the degrees offered, levels (Masters/Bachelors etc., if the degree available online or offline or both and finally the in-state and out-state fee per credit hour)
+This query uses the following 4 tables:
+DEGREES_OFFERED
+DEGREE_LEVEL
+IN_STATE_FEE_CODES
+OUT_STATE_FEE_CODES 
+
+*/
+
+
+SELECT A.DEGREE_NAME, B.LEVEL_NAME, A.AVAILABLE_ONLINE,
+A.AVAILABLE_CLASS_ROOM, C.CREDIT_HOUR_FEE IN_STATE_FEE_PER_CREDIT_HR,D.CREDIT_HOUR_FEE OUT_STATE_FEE_PER_CREDIT_HR
+FROM
+DEGREES_OFFERED A, DEGREE_LEVEL B, IN_STATE_FEE_CODES C, OUT_STATE_FEE_CODES D
+WHERE A.DEGREE_LEVEL = B.LEVEL AND A.IN_STATE_FEE_ID = C.FEE_ID AND A.OUT_STATE_FEE_ID = D.FEE_ID;
+
+
+
+
+
+
+/* DEMONSTRATION OF ON DELETE CASCADE FUNCTIONALITY */
+
+/*Between the tables STUDENT_PROFILE and STUDENT_APPLICATION, we have ON DELETE CASCADE Relationship. Hence if we delete any student record from STUDENT_PROFILE, then all the dependent records are deleted from STUDENT_APPLICATION.*/
+
+/*To demonstrate the CASCADE DELETES, use this query to find students who are currently applied to at least one program*/
+
+
+SELECT D.STUDENT_ID, D.FIRST_NAME, D.LAST_NAME, B.DEGREE_NAME AS APPLIED_TO, E.LEVEL_NAME AS DEGREE_LEVEL, C.STATUS_DESCRIPTION   
+FROM 
+STUDENT_APPLICATION A, DEGREES_OFFERED B, APPLICATION_STATUS_CODES C, STUDENT_PROFILE D, DEGREE_LEVEL E 
+WHERE A.STUDENT_ID = D.STUDENT_ID AND 
+A.DEGREE_ID = B.DEGREE_ID AND A.STATUS_ID = C.STATUS_ID AND E.LEVEL = B.DEGREE_LEVEL
+ORDER BY 1;
+
+/*
+The query above displays that we currently have 4 students applied to at least one program, and out of these 4 students, one student NIKITA (student ID: 2) has applied for 2 programs (Masters in Business Administration and Masters in Data Analytics). If this student withdraws the application then all the dependent rows in STUDENT APPLICATION will be deleted. Since this student has applied for 2 degree programs, 2 records must be automatically deleted from STUDENT_APPLICATION table.
+*/
+
+/*
+This query displays 2 records from the table STUDENT_APPLICATION belonging to Student ID 2
+*/
+SELECT * FROM STUDENT_APPLICATION 
+WHERE STUDENT_ID = 2;
+
+/*
+Let us delete the data related to Student ID 2 from STUDENT_PROFILE
+*/
+
+DELETE FROM STUDENT_PROFILE WHERE STUDENT_ID = 2;
+
+/*
+If the following query is executed again, we get NO rows, since the data related to STUDENT ID 2 was deleted from STUDENT_PROFILE, and since the table STUDENT_APPLICATION is dependent on STUDENT_PROFILE, we had a cascaded delete from STUDENT_APPLICATION 
+*/ 
+
+SELECT * FROM STUDENT_APPLICATION 
+WHERE STUDENT_ID = 2;
+
+
+/*
+FUTURE REQUIREMENTS
+*/
+
+/*
+1.	The current database must be enhanced to store Students Login credentials (User_ID, Encrypted password and security questions)
+
+2.	The current database must be enhanced to store if the application needs GRE/GMAT/TOEFL/SAT Scores, the minimum acceptable scores, and what was the average score in the last academic year.
+
+3.	The current database must be enhanced to store the scholarship availability, their application deadlines. 
+
+*/
