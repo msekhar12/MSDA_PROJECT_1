@@ -16,5 +16,3 @@ Here is the files content description
 "Student_Application.html" - This is web interface (mock) for a prospective student to create a student profile.
 
 "application_submission" - This is a web page that will be displayed, whenever a student creates a student profile. This is also a mock screen.
-
-MSDA PROJECT 1
