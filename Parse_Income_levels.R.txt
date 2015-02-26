@@ -1,6 +1,6 @@
 #Install the XML Package, if needed
 #install.packages("XML")
-
+ 
 #This function will parse the data from the website: "http://www.iawp.org/joiniawp/countrylist.htm"
 #and creates a file which can be loaded into a postgres table.
 
