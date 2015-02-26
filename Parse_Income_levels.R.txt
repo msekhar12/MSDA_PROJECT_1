@@ -14,10 +14,6 @@ tbls <- readHTMLTable(u,which=1,colClasses=c("integer","character","character","
 tbls[6:213,c(3,4,7)]
 
 #Cleanse the data 
-# tbls$class <- ifelse(grepl("Lower middle",tbls[,7]),'Lower Middle',tbls[,7])
-# tbls$class <- ifelse(grepl("High income",tbls[,7]),'High Income',tbls$class)
-# tbls$class <- ifelse(grepl("Upper middle",tbls[,7]),'Upper Middle',tbls$class)
-# tbls$class <- ifelse(grepl("Low income",tbls[,7]),'Low',tbls$class)
 
  tbls$class <- ifelse(grepl("Lower middle",tbls[,7]),3,tbls[,7])
  tbls$class <- ifelse(grepl("High income",tbls[,7]),1,tbls$class)
